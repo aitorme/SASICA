@@ -169,7 +169,7 @@ elseif numel(varargin) > 1 && ischar(varargin{1})
     handles.EEG = EEG;
     return;
 else
-    cfg = getpref('SASICA','cfg',getdefs);
+    cfg = setdef(getpref('SASICA','cfg',getdefs),getdefs);
 end
 % create command line for eegh
 if not(isempty(cfg))
@@ -863,6 +863,7 @@ def.MARA.enable = false;
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
 def.opts.nocompute = 0;
+def.opts.legfig = 1;
 
 
 

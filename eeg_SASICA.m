@@ -782,24 +782,27 @@ if any(~noplot)
             end
         end
         set(hfig,'visible','on');
-        try
-            pop_selectcomps(EEG, [ncomp+1]);
-        end
-        textprogressbar;
         hlastfig = gcf;
-        set(hlastfig,'name',[get(hlastfig,'name') ' -- SASICA']);
-        lastax = findobj(hlastfig,'type','Axes');
-        set(lastax,'visible','off');
-        axes(lastax(end));
-        hold on
-        for irej = 1:numel(rejects)
-            set(gca,'xlimmode','manual');
-            if rejects(irej)
-                x = 0;
-                y = .5 - .2*irej;
-
-                scatter(x,y,'markerfacecolor',EEG.reject.SASICA.([rejfields{irej} 'col']),'markeredgecolor',EEG.reject.SASICA.([rejfields{irej} 'col']));
-                text(x+.1,y,[rejfields{irej,2} ' (' num2str(sum(EEG.reject.SASICA.(rejfields{irej,1}))) ')']);
+        if cfg.opts.legfig
+            try
+                pop_selectcomps(EEG, [ncomp+1]);
+            end
+            textprogressbar;
+            hlastfig = gcf;
+            set(hlastfig,'name',[get(hlastfig,'name') ' -- SASICA']);
+            lastax = findobj(hlastfig,'type','Axes');
+            set(lastax,'visible','off');
+            axes(lastax(end));
+            hold on
+            for irej = 1:numel(rejects)
+                set(gca,'xlimmode','manual');
+                if rejects(irej)
+                    x = 0;
+                    y = .5 - .2*irej;
+                    
+                    scatter(x,y,'markerfacecolor',EEG.reject.SASICA.([rejfields{irej} 'col']),'markeredgecolor',EEG.reject.SASICA.([rejfields{irej} 'col']));
+                    text(x+.1,y,[rejfields{irej,2} ' (' num2str(sum(EEG.reject.SASICA.(rejfields{irej,1}))) ')']);
+                end
             end
         end
         for i = numel(hfig):-1:1
