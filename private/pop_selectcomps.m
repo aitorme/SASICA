@@ -143,9 +143,11 @@ for ri = compnum
 
         % plot the head
         % -------------
-        if ~strcmp(get(gcf, 'tag'), currentfigtag);
+        if isempty(findobj('tag',currentfigtag))
             disp('Aborting plot');
             return;
+        else
+            set(0,'currentfigure',findobj('tag',currentfigtag))
         end;
         ha = axes('Units','Normalized', 'Position',[X Y sizewx sizewy].*s+q);
         if plotelec
