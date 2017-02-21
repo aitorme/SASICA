@@ -586,11 +586,7 @@ if strcmpi(whitebk, 'on')
     BACKCOLOR = [ 1 1 1 ];
 end;
 
-if isempty(find(strcmp(varargin,'colormap')))
-    cmap = colormap(DEFAULT_COLORMAP);
-else
     cmap = colormap;
-end
 cmaplen = size(cmap,1);
 
 if strcmp(STYLE,'blank')    % else if Values holds numbers of channels to mark
