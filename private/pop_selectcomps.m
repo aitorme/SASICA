@@ -37,7 +37,7 @@
 
 % 01-25-02 reformated help & license -ad
 
-function [EEG, com] = pop_selectcomps( EEG, compnum, comptot );
+function [EEG] = pop_selectcomps( EEG, compnum, comptot );
 if not(exist('comptot','var'))
     comptot = max(compnum);
 end
@@ -163,7 +163,7 @@ for ri = compnum
         % ---------------
         button = uicontrol(gcf, 'Style', 'pushbutton', 'Units','Normalized', 'Position',...
             [X Y+sizewy sizewx sizewy*0.25].*s+q, 'tag', ['comp' num2str(ri)]);
-        command = sprintf('pop_prop( %s, 0, %d, gcbo, { ''freqrange'', [1 50] });', inputname(1), ri); %RMC command = sprintf('pop_prop( %s, 0, %d, %3.15f, { ''freqrange'', [1 50] });', inputname(1), ri, button);
+        command = ['pop_prop( get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), 0, ' num2str(ri) ', gcbo, { ''freqrange'', [1 50] });']; 
         set( button, 'callback', command );
     end;
     set( button, 'backgroundcolor', eval(fastif(EEG.reject.gcompreject(ri), COLREJ,COLACC)), 'string', int2str(ri));
@@ -176,23 +176,14 @@ end;
 if ~exist('fig','var')
     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'Cancel', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
         'Position',[-10 -10  15 sizewy*0.25].*s+q, 'callback', 'close(gcf); fprintf(''Operation cancelled\n'')' );
-%     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'Set threhsolds', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
-%         'Position',[10 -10  15 sizewy*0.25].*s+q, 'callback', 'pop_icathresh(EEG); pop_selectcomps( EEG, gcbf);' );
-%     if isempty( EEG.stats.compenta	), set(hh, 'enable', 'off'); end;
-%     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'See comp. stats', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
-%         'Position',[30 -10  15 sizewy*0.25].*s+q, 'callback',  ' ' );
-%     if isempty( EEG.stats.compenta	), set(hh, 'enable', 'off'); end;
-%     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'See projection', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
-%         'Position',[50 -10  15 sizewy*0.25].*s+q, 'callback', ' ', 'enable', 'off'  );
     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'Help', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
         'Position',[70 -10  15 sizewy*0.25].*s+q, 'callback', 'pophelp(''pop_selectcomps'');' );
-    command = '[ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET); eegh(''[ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);''); close(gcf)';
+    command = '';
     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
         'Position',[90 -10  15 sizewy*0.25].*s+q, 'callback',  command);
     % sprintf(['eeg_global; if %d pop_rejepoch(%d, %d, find(EEG.reject.sigreject > 0), EEG.reject.elecreject, 0, 1);' ...
     %		' end; pop_compproj(%d,%d,1); close(gcf); eeg_retrieve(%d); eeg_updatemenu; '], rejtrials, set_in, set_out, fastif(rejtrials, set_out, set_in), set_out, set_in));
 end;
 
-com = [ 'pop_selectcomps(' inputname(1) ', ' vararg2str(compnum) ');' ];
 return;
 

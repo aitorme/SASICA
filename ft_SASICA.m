@@ -25,12 +25,11 @@
 %                           methods
 %               MARA        use MARA (Winkler et al. 2011) detection
 %                           methods
-%               opts        set various options: noplot, nocompute, and
-%                           FontSize
+%               opts        set various options: noplot, nocompute, FontSize
 %
 %           For more detailed information, see doc eeg_SASICA
 %
-%       For an example cfg structure, run cfg = SASICA('getdefs')
+%       For an example cfg structure, run cfg = ft_SASICA('getdefs')
 %
 %        - comp: the output of ft_componentanalysis
 %        - data: the output of ft_preprocessing
@@ -62,6 +61,11 @@
 
 function [cfg, EEG] = ft_SASICA(cfg,comp,data)
 
+if ischar(cfg)
+    cfg = eeg_SASICA([],['EEG = ' cfg ';']);
+    return
+end
+    
 % create a minimal EEG structure to pass to eeg_SASICA.
 EEG = eeg_emptyset;
 EEG.setname = 'internal';
@@ -93,10 +97,11 @@ for i = 1:EEG.nbchan
         EEG.chanlocs(i).Z = data.elec.pnt(ichan,3);
     else
         ichan = chnb(comp.topolabel{i},cfg.layout.label);
-        
-        [EEG.chanlocs(i).X] = cfg.layout.pos(ichan,1);
-        [EEG.chanlocs(i).Y] = cfg.layout.pos(ichan,2);
-        [EEG.chanlocs(i).Z] = 1;
+        if ~isempty(ichan)
+            [EEG.chanlocs(i).X] = cfg.layout.pos(ichan,1);
+            [EEG.chanlocs(i).Y] = cfg.layout.pos(ichan,2);
+            [EEG.chanlocs(i).Z] = 1;
+        end
     end
 end
 EEG.chanlocs = convertlocs(EEG.chanlocs,'cart2all');
@@ -117,16 +122,6 @@ end
 EEG = eeg_SASICA(EEG,cfg);
 
 
-if ~cfg.opts.noplot
-    mainfigs = findobj('-regexp','Name','Reject .* -- SASICA');
-    okbuts = findobj(mainfigs,'string','OK');
-    okcb = ['delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));delete(findobj(''-regexp'',''name'',''Automatic component rejection measures''));' ...
-        'cfg.reject = EEG.reject;'];
-    set(okbuts,'Callback',okcb);
-
-    assignin('base','EEG',EEG);
-else
-    cfg.reject = EEG.reject;
-end
+cfg.reject = EEG.reject;
 
 

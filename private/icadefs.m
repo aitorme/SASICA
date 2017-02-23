@@ -67,7 +67,11 @@ if retinaDisplay && strcmpi(tmpComputer(1:3), 'MAC')
 end
 
 % Graph Definitions
-DEFAULT_COLORMAP = 'jet';
+% try
+%     DEFAULT_COLORMAP = 'parula';
+% catch
+%     DEFAULT_COLORMAP = 'jet';
+% end
 
 if VERS < 8.04
     PLOT_LINEWIDTH   = 2;

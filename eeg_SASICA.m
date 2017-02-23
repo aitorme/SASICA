@@ -88,7 +88,7 @@ else
     cfg = vararg2struct(varargin);
 end
 % deal with calling pop_prop here
-if ischar(cfg) && strncmp(cfg,'pop_',4)
+if ischar(cfg)
     try
         eval(cfg);
     catch ME
@@ -105,7 +105,7 @@ if ischar(cfg) && strncmp(cfg,'pop_',4)
 end
 %
 PLOTPERFIG = 35;
-def = SASICA('getdefs');
+def = getdefs;
 
 cfg = setdef(cfg,def);
 v = regexp(version,'^\d+\.\d+','match');
@@ -685,24 +685,6 @@ if cfg.FASTER.enable
     end
     %----------------------------------------------------------------
 end
-if cfg.MARA.enable
-    rejects(9) = 1;
-    disp('MARA methods selection')
-    %% MARA
-    struct2ws(cfg.MARA);
-    if ~nocompute
-        [rej info] = MARA(EEG);
-        MR.rej = false(1,size(EEG.icaact,1));
-        MR.rej(rej) = true;
-        MR.info = info;
-
-        EEG.reject.SASICA.(strrep(rejfields{9,1},'rej','')) = MR;
-        EEG.reject.SASICA.(rejfields{9,1}) = MR.rej;
-    else
-        MR = EEG.reject.SASICA.(strrep(rejfields{9,1},'rej',''));
-    end
-    %----------------------------------------------------------------
-end
 
 EEG.reject.SASICA.var = var(EEG.icaact(:,:),[],2);% variance of each component
 
@@ -729,7 +711,7 @@ try
     delete(findobj('-regexp','name','pop_selectcomps'))
     drawnow
 end
-if any(~noplot)
+if ~noplotselectcomps
     if ~isempty([EEG.chanlocs.radius])% assume we have sensor locations...
         clear hfig
         delete(findobj('tag','waitcomp'))
@@ -737,18 +719,20 @@ if any(~noplot)
         textprogressbar('Drawing topos...');
         for ifig = 1:ceil((ncomp)/PLOTPERFIG)
             cmps = [1+(ifig-1)*PLOTPERFIG:min([ncomp,ifig*PLOTPERFIG])];
-            eeg_SASICA(EEG,['pop_selectcomps(EEG, [' num2str(cmps) '],' num2str(ncomp) ');']);
+            pop_selectcomps(EEG, cmps,ncomp);
             hfig(ifig) = gcf;
             set(hfig(ifig),'name',[get(hfig(ifig),'name') ' -- SASICA ' num2str(ifig)]);
             % find the ok button and change its callback fcn
             okbutt = findobj(hfig(ifig),'string','OK');
-            set(okbutt,'callback',['delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));delete(findobj(''-regexp'',''name'',''Automatic component rejection measures''));' ...
-                'if exist(''ALLEEG'',''var'') && exist(''EEG'',''var'') && exist(''CURRENTSET'',''var''); [ALLEEG EEG CURRENTSET] = eeg_store(ALLEEG, EEG,CURRENTSET); if not(isempty(findobj(''-regexp'',''name'',''^EEGLAB''))); eeglab(''redraw'');end;end;' ...
-                'warndlg({''Remember you need to now subtract the marked components.'' ''Use Tools > Remove components''});']);
+            if ifig == 1
+                set(hfig(ifig),'userdata',EEG);
+            end
+            set(okbutt,'callback','uiresume(gcf);');
             % find the cancel button and change its callback fcn
             cancelbutt = findobj(hfig(ifig),'string','Cancel');
-            closecallback = ['try; delete(findobj(''-regexp'',''name'',''pop_selectcomps''));delete(findobj(''-regexp'',''name'',''Automatic component rejection measures''));end;'];
-            set(cancelbutt,'callback',[closecallback 'EEG.reject.gcompreject = false(size(EEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');']);
+            closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
+                'uiresume(gcf);'];
+            set(cancelbutt,'callback',closecallback );
             set(hfig(ifig),'closerequestfcn',closecallback)
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
@@ -787,7 +771,6 @@ if any(~noplot)
             try
                 pop_selectcomps(EEG, [ncomp+1]);
             end
-            textprogressbar;
             hlastfig = gcf;
             set(hlastfig,'name',[get(hlastfig,'name') ' -- SASICA']);
             lastax = findobj(hlastfig,'type','Axes');
@@ -805,19 +788,64 @@ if any(~noplot)
                 end
             end
         end
+        textprogressbar;
         for i = numel(hfig):-1:1
             figure(hfig(i));
             setctxt(hfig(i),EEG,cfg);
         end
         figure(hlastfig);
+        uiwait(hfig(1))
+        if ishandle(hfig(1))
+            EEG = get(hfig(1),'userdata');
+        end
+        delete(findobj('-regexp','name','pop_selectcomps.* -- SASICA'));
+        delete(findobj('-regexp','name','Automatic component rejection measures'));
     else
         disp('No channel locations. I''m not plotting.');
     end
 end
-if nargout == 0
-    assignin('caller','EEG',EEG);
-end
 
+
+function def = getdefs
+
+def.autocorr.enable = false;
+def.autocorr.dropautocorr = 'auto';
+def.autocorr.autocorrint = 20;% will compute autocorrelation with this many milliseconds lag
+
+def.focalcomp.enable = false;
+def.focalcomp.focalICAout = 'auto';
+
+def.trialfoc.enable = false;
+def.trialfoc.focaltrialout = 'auto';
+
+def.resvar.enable = false;
+def.resvar.thresh = 15;% %residual variance allowed
+
+def.SNR.enable = false;
+def.SNR.snrPOI = [0 Inf];% period of interest (signal)
+def.SNR.snrBL = [-Inf 0];% period of no interest (noise)
+def.SNR.snrcut = 1;% SNR below this threshold will be dropped
+
+def.EOGcorr.enable = false;
+def.EOGcorr.corthreshV = 'auto 4';% threshold correlation with vertical EOG
+def.EOGcorr.Veogchannames = [];% vertical channel(s)
+def.EOGcorr.corthreshH = 'auto 4';% threshold correlation with horizontal EOG
+def.EOGcorr.Heogchannames = [];% horizontal channel(s)
+
+def.chancorr.enable = false;
+def.chancorr.corthresh = 'auto 4';% threshold correlation
+def.chancorr.channames = [];% channel(s)
+
+def.FASTER.enable = false;
+def.FASTER.blinkchanname = [];
+
+def.ADJUST.enable = false;
+
+def.opts.FontSize = 14;
+def.opts.noplot = 0;
+def.opts.noplotselectcomps = 0;
+def.opts.nocompute = 0;
+def.opts.legfig = 1;
 
 function [lengths]  =  min_z(list_properties, rejection_options)
 if (~exist('rejection_options', 'var'))
@@ -867,13 +895,17 @@ for i = 1:numel(buttonnums)
         status = 0;
     end;
 
-    hcb1 = ['EEG.reject.gcompreject(' num2str(buttonnums(i)) ') = ~EEG.reject.gcompreject(' num2str(buttonnums(i)) ');'...
-        'set(gco,''backgroundcolor'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '), ' COLREJ ',' COLACC '));'...
-        'set(findobj(''tag'',''ctxt' num2str(buttonnums(i)) '''), ''Label'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '),''ACCEPT'',''REJECT''));' ];
+    hcb1 = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) ') = ~tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) ');'...
+        'if tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) '); tmpcol = ' COLREJ '; else tmpcol = ' COLACC ';end;'...
+        'set(gco,''backgroundcolor'',tmpcol);clear tmpcol;'...
+        'if tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) '); tmp = ''ACCEPT'';else tmp = ''REJECT'';end;'...
+        'set(findobj(''tag'',''ctxt' num2str(buttonnums(i)) '''), ''Label'',tmp);clear tmp;'...
+        'set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);'...
+        'clear tmpEEG;'];
     uimenu(hcmenu, 'Label', fastif(status,'ACCEPT','REJECT'), 'Callback', hcb1,'tag',['ctxt' num2str(buttonnums(i))]);
 
     mycb = strrep(get(buttons(i),'Callback'),'''','''''');
-    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(EEG,''pop_prop');
+    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1\$''),''userdata''),''pop_prop');
     mycb = [mycb ''');'];
     set(buttons(i),'CallBack',mycb)
     set(buttons(i),'uicontextmenu',hcmenu)
