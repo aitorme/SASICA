@@ -76,7 +76,12 @@ EEG.srate = comp.fsample;
 EEG.xmin = comp.time{1}(1);
 EEG.xmax = comp.time{end}(end);
 EEG.times = comp.time{1}*1000;
-EEG.icaact = cat(3,comp.trial{:});
+if numel(unique(cellfun(@(x) size(x,2),comp.trial))) == 1
+    EEG.icaact = cat(3,comp.trial{:});
+else
+    warning('Trials have unequal length. Catenating for display')
+    EEG.icaact = cat(2,comp.trial{:});
+end
 EEG.icawinv = comp.topo;
 EEG.icaweights = pinv(EEG.icawinv);
 EEG.icasphere  = eye(size(EEG.icaweights,2));
@@ -111,8 +116,14 @@ EEG.chaninfo.nosedir = '+Y';
 if not(exist('data','var'))
     EEG.data = reshape(EEG.icawinv * EEG.icaact(:,:),EEG.nbchan,EEG.pnts,EEG.trials);
 else
-    EEG.data = cat(3,data.trial{:});
+    if numel(unique(cellfun(@(x) size(x,2),comp.trial))) == 1
+        EEG.data = cat(3,data.trial{:});
+    else
+        EEG.data = cat(2,data.trial{:});
+        EEG.trials = 1;
+    end
 end
+EEG.pnts = size(EEG.data,2);
 EEG.icachansind = 1:size(EEG.data,1);
 
 if isfield(cfg,'reject')
