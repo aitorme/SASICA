@@ -59,11 +59,6 @@ if nargin < 2
     if isempty(result), return; end;
     compnum = eval( [ '[' result{1} ']' ]);
 
-    if length(compnum) > PLOTPERFIG
-        ButtonName=questdlg2(strvcat(['More than ' int2str(PLOTPERFIG) ' components so'],'this function will pop-up several windows'), ...
-            'Confirmation', 'Cancel', 'OK','OK');
-        if ~isempty( strmatch(lower(ButtonName), 'cancel')), return; end;
-    end;
 
 end;
 % fprintf('Drawing figure...\n');
