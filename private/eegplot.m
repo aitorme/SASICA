@@ -523,6 +523,7 @@ if ~isstr(data) % If NOT a 'noui' call or a callback from uicontrols
   posbut(20,:) = [-0.17   0.15     0.015    0.8 ]; % slider
   posbut(21,:) = [0.738    0.87    0.06      0.048];%normalize
   posbut(22,:) = [0.738    0.93    0.06      0.048];%stack channels(same offset)
+  posbut(23,:) = [0.65    0.87    0.06      0.048]; % checkred
   posbut(:,1) = posbut(:,1)+0.2;
 
 % Five move buttons: << < text > >> 
@@ -734,6 +735,16 @@ u(22) = uicontrol('Parent',figh, ...
     'Position',posbut(22,:), ...
     'Tag','Envelope',...
     'string','Stack', 'callback', cb_envelope);
+
+if ~isempty(g.data2)
+    cb_red = 'eeg_SASICA([],''eegplot(''''drawp'''',0);'');';
+    u(23) = uicontrol('Parent',figh, ...
+        'Style','checkbox',...
+        'Units', 'normalized', ...
+        'Position',posbut(23,:), ...
+        'Tag','checkred',...
+        'string','Red trace', 'value',1,'callback', cb_red);
+end
 
 
   if isempty(g.command) tmpcom = 'fprintf(''Rejections saved in variable TMPREJ\n'');';   
@@ -1361,7 +1372,7 @@ else
 	 end;	  
 
      % draw second data if necessary
-     if ~isempty(g.data2)
+     if ~isempty(g.data2) && get(findobj('tag','checkred'),'value')
          tmpdata = data;
          set(ax1, 'userdata', g.data2);
          g.data2 = [];
