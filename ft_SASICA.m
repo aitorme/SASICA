@@ -94,19 +94,25 @@ end
 for i = 1:EEG.nbchan
     EEG.chanlocs(i).labels = comp.topolabel{i};
     % attempt to create a chanlocs
-    if exist('data','var') && isfield(data,'elec')
-        ichan = chnb(comp.topolabel{i},data.elec.label);
-        
-        EEG.chanlocs(i).X = data.elec.pnt(ichan,1);
-        EEG.chanlocs(i).Y = data.elec.pnt(ichan,2);
-        EEG.chanlocs(i).Z = data.elec.pnt(ichan,3);
-    else
+    if isfield(cfg,'layout')
         ichan = chnb(comp.topolabel{i},cfg.layout.label);
         if ~isempty(ichan)
             [EEG.chanlocs(i).X] = cfg.layout.pos(ichan,1);
             [EEG.chanlocs(i).Y] = cfg.layout.pos(ichan,2);
             [EEG.chanlocs(i).Z] = 1;
         end
+    elseif exist('data','var') && isfield(data,'elec')
+        ichan = chnb(comp.topolabel{i},data.elec.label);
+        if isfield(data.elec,'pnt')
+            EEG.chanlocs(i).X = data.elec.pnt(ichan,1);
+            EEG.chanlocs(i).Y = data.elec.pnt(ichan,2);
+            EEG.chanlocs(i).Z = data.elec.pnt(ichan,3);
+        elseif isfield(data.elec,'chanpos')
+            EEG.chanlocs(i).X = data.elec.chanpos(ichan,1);
+            EEG.chanlocs(i).Y = data.elec.chanpos(ichan,2);
+            EEG.chanlocs(i).Z = data.elec.chanpos(ichan,3);
+        end            
+    
     end
 end
 EEG.chanlocs = convertlocs(EEG.chanlocs,'cart2all');
