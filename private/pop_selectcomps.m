@@ -73,7 +73,7 @@ if length(compnum) > PLOTPERFIG
     return;
 end;
 
-if isempty(EEG.reject.gcompreject)
+if isempty(EEG.reject.gcompreject) || numel(EEG.reject.gcompreject) == 1
     EEG.reject.gcompreject = zeros( size(EEG.icawinv,2));
 end;
 try, icadefs;
