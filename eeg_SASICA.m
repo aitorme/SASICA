@@ -105,7 +105,7 @@ if ischar(cfg)
 end
 %
 PLOTPERFIG = 35;
-def = getdefs;
+def = SASICA('getdefs');
 
 cfg = setdef(cfg,def);
 v = regexp(version,'^\d+\.\d+','match');
@@ -809,47 +809,6 @@ if ~noplotselectcomps
     end
 end
 
-
-function def = getdefs
-
-def.autocorr.enable = false;
-def.autocorr.dropautocorr = 'auto';
-def.autocorr.autocorrint = 20;% will compute autocorrelation with this many milliseconds lag
-
-def.focalcomp.enable = false;
-def.focalcomp.focalICAout = 'auto';
-
-def.trialfoc.enable = false;
-def.trialfoc.focaltrialout = 'auto';
-
-def.resvar.enable = false;
-def.resvar.thresh = 15;% %residual variance allowed
-
-def.SNR.enable = false;
-def.SNR.snrPOI = [0 Inf];% period of interest (signal)
-def.SNR.snrBL = [-Inf 0];% period of no interest (noise)
-def.SNR.snrcut = 1;% SNR below this threshold will be dropped
-
-def.EOGcorr.enable = false;
-def.EOGcorr.corthreshV = 'auto 4';% threshold correlation with vertical EOG
-def.EOGcorr.Veogchannames = [];% vertical channel(s)
-def.EOGcorr.corthreshH = 'auto 4';% threshold correlation with horizontal EOG
-def.EOGcorr.Heogchannames = [];% horizontal channel(s)
-
-def.chancorr.enable = false;
-def.chancorr.corthresh = 'auto 4';% threshold correlation
-def.chancorr.channames = [];% channel(s)
-
-def.FASTER.enable = false;
-def.FASTER.blinkchanname = [];
-
-def.ADJUST.enable = false;
-
-def.opts.FontSize = 14;
-def.opts.noplot = 0;
-def.opts.noplotselectcomps = 0;
-def.opts.nocompute = 0;
-def.opts.legfig = 1;
 
 function [lengths]  =  min_z(list_properties, rejection_options)
 if (~exist('rejection_options', 'var'))
